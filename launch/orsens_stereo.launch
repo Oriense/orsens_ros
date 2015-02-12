@@ -1,0 +1,14 @@
+<launch>
+  <node pkg="orsens" type="orsens_node" name="orsens"  output="screen" respawn="true">
+    <param name="capture_mode" value="left_right"/>    
+    <param name="color_width" value="640"/>
+  </node> 
+  <node pkg="image_view" type="image_view" name="left">
+    <remap from="image" to="orsens/left" />
+    <param name="autosize" value="true" />
+  </node> 
+  <node pkg="image_view" type="image_view" name="right">
+    <remap from="image" to="orsens/right" />
+    <param name="autosize" value="true" />
+  </node> 
+</launch>

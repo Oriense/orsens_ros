@@ -1,0 +1,10 @@
+<launch>
+  <node pkg="orsens" type="orsens_node" name="orsens"  output="screen" respawn="true">
+    <param name="capture_mode" value="depth_only"/>    
+    <param name="color_width" value="640"/>
+  </node> 
+  <node pkg="image_view" type="image_view" name="depth">
+    <remap from="image" to="orsens/disparity" />
+    <param name="autosize" value="true" />
+  </node> 
+</launch>
