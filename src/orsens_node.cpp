@@ -34,9 +34,6 @@
 using namespace cv;
 using namespace sensor_msgs;
 
-bool cam_init();
-bool cam_deinit();
-
 ros::Publisher pub_left;
 ros::Publisher pub_right;
 ros::Publisher pub_disp;
@@ -67,6 +64,7 @@ int main (int argc, char** argv)
     string data_path;
     int color_width, depth_width;
     bool compress_color, compress_depth;
+    bool publish_color, publish_disp, publish_depth;
 
     nh.param<string>("/orsens/capture_mode", capture_mode_string, "depth_only");
     nh.param<string>("/orsens/data_path", data_path, "../data");
@@ -74,6 +72,9 @@ int main (int argc, char** argv)
     nh.param<int>("/orsens/depth_width", depth_width, 640);
     nh.param<bool>("/orsens/compress_color", compress_color, false);
     nh.param<bool>("/orsens/compress_depth", compress_depth, false);
+    nh.param<bool>("/orsens/publish_color", publish_color, true);
+    nh.param<bool>("/orsens/publish_disp", publish_disp, true);
+    nh.param<bool>("/orsens/publish_depth", publish_depth, true);
 
     Orsens::CaptureMode capture_mode = Orsens::captureModeFromString(capture_mode_string);
 
@@ -91,40 +92,53 @@ int main (int argc, char** argv)
     pub_disp = nh.advertise<sensor_msgs::Image> ("/orsens/disparity", 1); // 0-255
     pub_depth = nh.advertise<sensor_msgs::Image> ("/orsens/depth", 1); // uint16 in mm
 //    pub_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/camera_info", 1);
-//    pub_cloud = nh.advertise<pcl::PCLPointCloud2>("cloud", 1);
+//    pub_cloud = nh.advertise<pcl::PCLPointCloud2>("cloud", 1);orsens.getRate()
 
     ros::Rate loop_rate(15);
 
     working = true;
-    sensor_msgs::Image ros_left, ros_disp;
+    sensor_msgs::Image ros_left, ros_disp, ros_depth;
 
     while (nh.ok() && working)
     {
         ros::Time time = ros::Time::now();
 
-        orsens.grabSensorData(); //camera images and pose
+        orsens.grabSensorData();
         Mat color = orsens.getLeft();
         Mat disp = orsens.getDisp();
+        Mat depth = orsens.getDepth();
 
-        if (!color.empty())
+        if (publish_color && !color.empty())
         {
             fillImage(ros_left, "rgb8", color.rows, color.cols, 3 * color.cols, color.data);
 
             ros_left.header.stamp = time;
             ros_left.header.frame_id = "orsens_camera";
-            //l_info_msg.header.stamp = time;
-            //  l_info_msg.header.frame_id = "stereo_camera";
 
             pub_left.publish(ros_left);
+
+             //l_info_msg.header.stamp = time;
+            //  l_info_msg.header.frame_id = "stereo_camera";
             //  pub_info.publish(l_info_msg);
         }
-        if (!disp.empty())
+
+        if (publish_disp && !disp.empty())
         {
             fillImage(ros_disp, "mono8", disp.rows, disp.cols, disp.cols, disp.data);
 
             ros_disp.header.stamp = time;
 
             pub_disp.publish(ros_disp);
+
+        }
+
+        if (publish_depth && !depth.empty())
+        {
+            fillImage(ros_depth, "mono16", depth.rows, depth.cols, 2*depth.cols, depth.data);
+
+            ros_depth.header.stamp = time;
+
+            pub_depth.publish(ros_depth);
 
         }
 
