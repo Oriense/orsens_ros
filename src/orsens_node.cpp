@@ -67,17 +67,19 @@ int main (int argc, char** argv)
     bool compress_color, compress_depth;
     bool publish_color, publish_disp, publish_depth;
 
-    nh.param<string>("/orsens/capture_mode", capture_mode_string, "depth_only");
-    nh.param<string>("/orsens/data_path", data_path, "../data");
-    nh.param<int>("/orsens/color_width", color_width, 640);
-    nh.param<int>("/orsens/depth_width", depth_width, 640);
-    nh.param<int>("/orsens/color_rate", color_rate, 15);
-    nh.param<int>("/orsens/depth_rate", depth_rate, 15);
-    nh.param<bool>("/orsens/compress_color", compress_color, false);
-    nh.param<bool>("/orsens/compress_depth", compress_depth, false);
-    nh.param<bool>("/orsens/publish_color", publish_color, true);
-    nh.param<bool>("/orsens/publish_disp", publish_disp, true);
-    nh.param<bool>("/orsens/publish_depth", publish_depth, true);
+    std::string node_name = ros::this_node::getName();
+
+    nh.param<string>(node_name+"/capture_mode", capture_mode_string, "depth_only");
+    nh.param<string>(node_name+"/data_path", data_path, "../data");
+    nh.param<int>(node_name+"/color_width", color_width, 640);
+    nh.param<int>(node_name+"/depth_width", depth_width, 640);
+    nh.param<int>(node_name+"/color_rate", color_rate, 15);
+    nh.param<int>(node_name+"/depth_rate", depth_rate, 15);
+    nh.param<bool>(node_name+"/compress_color", compress_color, false);
+    nh.param<bool>(node_name+"/compress_depth", compress_depth, false);
+    nh.param<bool>(node_name+"/publish_color", publish_color, true);
+    nh.param<bool>(node_name+"/publish_disp", publish_disp, true);
+    nh.param<bool>(node_name+"/publish_depth", publish_depth, true);
 
     Orsens::CaptureMode capture_mode = Orsens::captureModeFromString(capture_mode_string);
 
