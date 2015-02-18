@@ -29,11 +29,6 @@ class Orsens
 
 private:
 
-    static const int DISPARITY_COUNT = 256;
-    static const int NO_DISTANCE = 0;
-    static const int TOO_CLOSE_DISTANCE = 10000;
-    static const int NO_ANGLE = 361;
-
     string data_path_;
 
     uint16_t color_width_;
@@ -47,11 +42,13 @@ private:
     Mat left_, right_;
     Mat left_gray_, right_gray_;
     Mat disp_, disp_raw_, disp_raw_prev_, depth_, depth8_;
+    Mat segmentation_mask_;
 
     //what we've got processed
     bool got_gray_, got_depth_;
 
     //camera info
+    static const int DISPARITY_COUNT = 256;
     uint16_t zdtable_[DISPARITY_COUNT];
 
     uint16_t min_distance_;
@@ -64,17 +61,26 @@ private:
     //scene info
     std::vector<Human> humans_;
 
-    //capturing
-//   bool allocImageBuffers(int cx1, int cy1, int cx2, int cy2);
-    //  void freeImageBuffers();
-
     //processing
     bool makeGray();
     bool makeDepth();
+    bool segmentFloor(Mat disp);
+
+    //obstacles
+   // int getNearestDistance(Mat depth, Rect roi);     // finds minimum distance in a zone
+   // Point3f getNearestPoint(Mat depth, Mat disp, Rect roi, Point3i& ipt);
+
+    // finds minimum distance in the zone
+    uint16_t nearestDistanceInDepth(Mat depth, Rect roi);
 
 public:
     Orsens() {};
     ~Orsens() {};
+
+
+    static const int NO_DISTANCE = 0;
+    static const int MAX_DISTANCE = 10000;
+    static const int NO_ANGLE = 361;
 
  typedef enum
     {
@@ -93,6 +99,7 @@ public:
     Mat getDispColored();
     Mat getDepth();
     Mat getDepth8(); //scaled to fit 8 bit
+    Mat getSegmentationMask();
 
     uint8_t getRate();
 
@@ -104,6 +111,11 @@ public:
     Point3f worldPointAtImagePointM(uint16_t x, uint16_t y);
     float directionToImagePoint(uint16_t x, uint16_t y);
     float directionToImageRect(Rect rect);
+
+    uint16_t getMinDistance(); //minimun possible distance camera able to measure
+    uint16_t getMaxDistance(); //maximum possible distance
+
+    uint16_t getNearestDistance(Rect roi);
 
     //detection
     std::vector<Human> getHumans();
