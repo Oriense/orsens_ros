@@ -63,6 +63,7 @@ int main (int argc, char** argv)
     string capture_mode_string;
     string data_path;
     int color_width, depth_width;
+    int color_rate, depth_rate;
     bool compress_color, compress_depth;
     bool publish_color, publish_disp, publish_depth;
 
@@ -70,6 +71,8 @@ int main (int argc, char** argv)
     nh.param<string>("/orsens/data_path", data_path, "../data");
     nh.param<int>("/orsens/color_width", color_width, 640);
     nh.param<int>("/orsens/depth_width", depth_width, 640);
+    nh.param<int>("/orsens/color_rate", color_rate, 15);
+    nh.param<int>("/orsens/depth_rate", depth_rate, 15);
     nh.param<bool>("/orsens/compress_color", compress_color, false);
     nh.param<bool>("/orsens/compress_depth", compress_depth, false);
     nh.param<bool>("/orsens/publish_color", publish_color, true);
@@ -80,7 +83,7 @@ int main (int argc, char** argv)
 
     printf("params: %d %s\n", color_width, capture_mode_string.c_str());
 
-    if (!orsens.start(capture_mode, data_path, color_width, depth_width, compress_color, compress_depth))
+    if (!orsens.start(capture_mode, data_path, color_width, depth_width, color_rate, depth_rate, compress_color, compress_depth))
     {
         ROS_ERROR("unable to start OrSens device, check connection\n");
         return -1;
