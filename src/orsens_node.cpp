@@ -30,6 +30,7 @@
 #include <unistd.h>
 
 #include "../include/orsens.h"
+#include <../../devel/include/orsens/NearestObstacle.h>
 
 using namespace cv;
 using namespace sensor_msgs;
@@ -41,15 +42,17 @@ ros::Publisher pub_depth;
 ros::Publisher pub_disp_filtered;
 ros::Publisher pub_info;
 ros::Publisher pub_cloud;
+ros::Publisher pub_nearest_point;
+ros::Publisher pub_segmentation_mask;
 
-Orsens orsens;
+Orsens orsens_device;
 
 bool working = false;
 
 void sigint_handler(int sig)
 {
     working = false;
-    orsens.stop();
+    orsens_device.stop();
     ros::shutdown();
 }
 
@@ -65,7 +68,7 @@ int main (int argc, char** argv)
     int color_width, depth_width;
     int color_rate, depth_rate;
     bool compress_color, compress_depth;
-    bool publish_color, publish_disp, publish_depth, publish_cloud;
+    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_nearest_point, publish_segmentation_mask;
 
     std::string node_name = ros::this_node::getName();
 
@@ -81,12 +84,14 @@ int main (int argc, char** argv)
     nh.param<bool>(node_name+"/publish_disp", publish_disp, true);
     nh.param<bool>(node_name+"/publish_depth", publish_depth, true);
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
+    nh.param<bool>(node_name+"/publish_nearest_point", publish_nearest_point, false);
+    nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
 
     Orsens::CaptureMode capture_mode = Orsens::captureModeFromString(capture_mode_string);
 
     printf("params: %d %s\n", color_width, capture_mode_string.c_str());
 
-    if (!orsens.start(capture_mode, data_path, color_width, depth_width, color_rate, depth_rate, compress_color, compress_depth))
+    if (!orsens_device.start(capture_mode, data_path, color_width, depth_width, color_rate, depth_rate, compress_color, compress_depth))
     {
         ROS_ERROR("unable to start OrSens device, check connection\n");
         return -1;
@@ -98,22 +103,25 @@ int main (int argc, char** argv)
     pub_disp = nh.advertise<sensor_msgs::Image> ("/orsens/disparity", 1); // 0-255
     pub_depth = nh.advertise<sensor_msgs::Image> ("/orsens/depth", 1); // uint16 in mm
 //    pub_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/camera_info", 1);
-    pub_cloud = nh.advertise<pcl::PCLPointCloud2>("cloud", 1);
+    pub_cloud = nh.advertise<pcl::PCLPointCloud2>("/orsens/cloud", 1);
+    pub_nearest_point = nh.advertise<orsens::NearestObstacle>("/orsens/nearest_point", 1);
+    pub_segmentation_mask = nh.advertise<sensor_msgs::Image>("/orsens/segmentation_mask", 1);
 
     ros::Rate loop_rate(15);
 
     working = true;
-    sensor_msgs::Image ros_left, ros_disp, ros_depth;
+    sensor_msgs::Image ros_left, ros_disp, ros_depth, ros_mask;
+    orsens::NearestObstacle obs;
 
     while (nh.ok() && working)
     {
         ros::Time time = ros::Time::now();
 
-        orsens.grabSensorData();
+        orsens_device.grabSensorData();
 
         if (publish_color)
         {
-            Mat color = orsens.getLeft();
+            Mat color = orsens_device.getLeft();
             if (!color.empty())
             {
                 fillImage(ros_left, "rgb8", color.rows, color.cols, 3 * color.cols, color.data);
@@ -127,7 +135,7 @@ int main (int argc, char** argv)
 
         if (publish_disp)
         {
-            Mat disp = orsens.getDisp();
+            Mat disp = orsens_device.getDisp();
             if  (!disp.empty())
             {
                 fillImage(ros_disp, "mono8", disp.rows, disp.cols, disp.cols, disp.data);
@@ -141,7 +149,7 @@ int main (int argc, char** argv)
 
         if (publish_depth)
         {
-            Mat depth = orsens.getDepth();
+            Mat depth = orsens_device.getDepth();
             if (!depth.empty())
             {
                 fillImage(ros_depth, "mono16", depth.rows, depth.cols, 2*depth.cols, depth.data);
@@ -154,8 +162,8 @@ int main (int argc, char** argv)
 
         if (publish_cloud)
         {
-            Mat cloud = orsens.getPointCloud();
-            Mat rgb = orsens.getLeft();
+            Mat cloud = orsens_device.getPointCloud();
+            Mat rgb = orsens_device.getLeft();
             if (!cloud.empty())
             {
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudOut (new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -206,6 +214,32 @@ int main (int argc, char** argv)
                 cloudOutROS->header.frame_id = "orsens_camera";
                 pub_cloud.publish(cloudOutROS);
             }
+        }
+        if(publish_nearest_point)
+        {
+            ScenePoint scene_point = orsens_device.getNearestPoint();
+            obs.header.stamp = time;
+            obs.header.frame_id = "orsens_camera";
+            obs.u = scene_point.pt_image.x;
+            obs.v = scene_point.pt_image.y;
+            obs.pt.x = scene_point.pt_world.x;
+            obs.pt.y = scene_point.pt_world.y;
+            obs.pt.z = scene_point.pt_world.z;
+            pub_nearest_point.publish(obs);
+        }
+        if(publish_segmentation_mask)
+        {
+            Mat mask = orsens_device.getSegmentationMask();
+            if (!mask.empty())
+            {
+                fillImage(ros_mask, "mono8", mask.rows, mask.cols, mask.cols, mask.data);
+
+                ros_mask.header.stamp = time;
+                ros_mask.header.frame_id = "orsens_camera";
+
+                pub_segmentation_mask.publish(ros_mask);
+            }
+
         }
 
         ros::spinOnce();
