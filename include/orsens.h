@@ -91,8 +91,7 @@ public:
 
     static CaptureMode captureModeFromString(const std::string& str);
 
-    bool start(CaptureMode capture_mode=CAPTURE_DEPTH_ONLY, string data_path="../data", uint16_t color_width=640, uint16_t depth_width=640, uint8_t color_rate=15, uint8_t depth_rate=15,
-               bool compress_color=false, bool compress_depth=false, uint16_t baseline=60);
+    bool start(CaptureMode capture_mode=CAPTURE_DEPTH_ONLY, string data_path="../data", uint16_t color_width=640, uint16_t depth_width=640, uint8_t color_rate=15, uint8_t depth_rate=15, bool compress_color=false, bool compress_depth=false, uint16_t baseline=60);
     bool stop();
     bool grabSensorData();
 
@@ -126,7 +125,7 @@ public:
     uint16_t getMaxDistance(); //maximum possible distance
 
     uint16_t getNearestDistance(Rect roi=Rect()); // finds nearest distance in the region, if roi is empty - in a whole image
-    ScenePoint getNearestPoint(Rect roi=Rect()); // the same, but point
+    ScenePoint getNearestPoint(Rect roi=Rect(), bool use_discrete_depth=false); // the same, but point
 
     //detection
     std::vector<Human> getHumans();
