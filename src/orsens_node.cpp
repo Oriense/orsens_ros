@@ -81,16 +81,12 @@ int main (int argc, char** argv)
     nh.param<int>(node_name+"/depth_rate", depth_rate, 15);
     nh.param<bool>(node_name+"/compress_color", compress_color, false);
     nh.param<bool>(node_name+"/compress_depth", compress_depth, false);
-    nh.param<bool>(node_name+"/publish_color", publish_color, true);
-    nh.param<bool>(node_name+"/publish_disp", publish_disp, true);
     nh.param<bool>(node_name+"/publish_depth", publish_depth, true);
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
     nh.param<bool>(node_name+"/publish_nearest_point", publish_nearest_point, false);
     nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
 
     Orsens::CaptureMode capture_mode = Orsens::captureModeFromString(capture_mode_string);
-
-    printf("params: %d %s\n", color_width, capture_mode_string.c_str());
 
     if (!orsens_device.start(capture_mode, data_path, color_width, depth_width, color_rate, depth_rate, compress_color, compress_depth))
     {
@@ -109,143 +105,167 @@ int main (int argc, char** argv)
     pub_segmentation_mask = nh.advertise<sensor_msgs::Image>("/orsens/segmentation_mask", 1);
 
     ros::Rate loop_rate(15);
+    string frame_id = "orsens_camera";
+
+    sensor_msgs::Image ros_left,  ros_right, ros_disp, ros_depth, ros_mask;
+    orsens::NearestObstacle obs;
 
     working = true;
-    sensor_msgs::Image ros_left, ros_disp, ros_depth, ros_mask;
-    orsens::NearestObstacle obs;
 
     while (nh.ok() && working)
     {
-        ros::Time time = ros::Time::now();
-
         orsens_device.grabSensorData();
 
-        if (publish_color)
+        Mat left, right, disp, depth, cloud;
+
+        switch (capture_mode)
         {
-            Mat color = orsens_device.getLeft();
-            if (!color.empty())
-            {
-                fillImage(ros_left, "bgr8", color.rows, color.cols, 3 * color.cols, color.data);
+        case Orsens::CAPTURE_DEPTH_ONLY:
+            disp = orsens_device.getDisp();
+            break;
 
-                ros_left.header.stamp = time;
-                ros_left.header.frame_id = "orsens_camera";
+        case Orsens::CAPTURE_LEFT_ONLY:
+            left = orsens_device.getLeft();
+            break;
 
-                pub_left.publish(ros_left);
-            }
+        case Orsens::CAPTURE_DEPTH_LEFT:
+            disp = orsens_device.getDisp();
+            left = orsens_device.getLeft();
+            break;
+
+        case Orsens::CAPTURE_LEFT_RIGHT:
+            left = orsens_device.getLeft();
+            right = orsens_device.getRight();
+            break;
         }
 
-        if (publish_disp)
+        ros::Time time = ros::Time::now();
+
+        if (!left.empty())
         {
-            Mat disp = orsens_device.getDisp();
-            if  (!disp.empty())
-            {
-                fillImage(ros_disp, "mono8", disp.rows, disp.cols, disp.cols, disp.data);
+            fillImage(ros_left, "bgr8", left.rows, left.cols, left.step.buf[0], left.data);
 
-                ros_disp.header.stamp = time;
+            ros_left.header.stamp = time;
+            ros_left.header.frame_id = frame_id;
 
-                pub_disp.publish(ros_disp);
-            }
-
+            pub_left.publish(ros_left);
         }
 
-        if (publish_depth)
+        if (!right.empty())
         {
-            Mat depth = orsens_device.getDepth();
-            if (!depth.empty())
-            {
-                fillImage(ros_depth, "mono16", depth.rows, depth.cols, 2*depth.cols, depth.data);
+            fillImage(ros_right, "bgr8", right.rows, right.cols, right.step.buf[0], right.data);
 
-                ros_depth.header.stamp = time;
+            ros_right.header.stamp = time;
+            ros_right.header.frame_id = frame_id;
 
-                pub_depth.publish(ros_depth);
-            }
+            pub_right.publish(ros_right);
         }
 
-        if (publish_cloud)
+        if  (!disp.empty())
         {
-            Mat cloud = orsens_device.getPointCloud();
-            Mat rgb = orsens_device.getLeft();
-            if (!cloud.empty())
+            fillImage(ros_disp, "mono8", disp.rows, disp.cols, disp.cols, disp.data);
+
+            ros_disp.header.stamp = time;
+
+            pub_disp.publish(ros_disp);
+
+            if (publish_depth)
             {
-                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudOut (new pcl::PointCloud<pcl::PointXYZRGB>);
+                Mat depth = orsens_device.getDepth();
+                if (!depth.empty())
+                {
+                    fillImage(ros_depth, "mono16", depth.rows, depth.cols, 2*depth.cols, depth.data);
 
-                // reset the point cloud
-                cloudOut->clear();
-                cloudOut->width = cloud.cols;
-                cloudOut->height = cloud.rows;
-                cloudOut->points.resize(cloudOut->width * cloudOut->height);
+                    ros_depth.header.stamp = time;
 
-                float px, py, pz;
-                uchar pb, pr, pg;
-                int index = 0;
+                    pub_depth.publish(ros_depth);
+                }
+            }
 
-                for (int y=0; y<cloud.rows; y++)
-                    for (int x=0; x<cloud.cols; x++)
-                    {
-                        // compute the point data
-                        //  if(mm>500 && mm<7000)
+            if (publish_cloud)
+            {
+                Mat cloud = orsens_device.getPointCloud();
+                if (!cloud.empty())
+                {
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudOut (new pcl::PointCloud<pcl::PointXYZRGB>);
+
+                    // reset the point cloud
+                    cloudOut->clear();
+                    cloudOut->width = cloud.cols;
+                    cloudOut->height = cloud.rows;
+                    cloudOut->points.resize(cloudOut->width * cloudOut->height);
+
+                    float px, py, pz;
+                    uchar pb=0, pr=0, pg=0;
+                    int index = 0;
+
+                    for (int y=0; y<cloud.rows; y++)
+                        for (int x=0; x<cloud.cols; x++)
                         {
+
                             px = cloud.at<cv::Vec3f>(y,x)[0];
                             py = cloud.at<cv::Vec3f>(y,x)[1];
                             pz = cloud.at<cv::Vec3f>(y,x)[2];
-                            pb = rgb.at<cv::Vec3b>(y,x)[0];
-                            pg = rgb.at<cv::Vec3b>(y,x)[1];
-                            pr = rgb.at<cv::Vec3b>(y,x)[2];
+
+                            if (!left.empty())
+                            {
+                                pb = left.at<cv::Vec3b>(y,x)[0];
+                                pg = left.at<cv::Vec3b>(y,x)[1];
+                                pr = left.at<cv::Vec3b>(y,x)[2];
+                            }
+
+                            cloudOut->points[index].x = px;
+                            cloudOut->points[index].y = py;
+                            cloudOut->points[index].z = pz;
+                            cloudOut->points[index].r = pr;
+                            cloudOut->points[index].g = pg;
+                            cloudOut->points[index].b = pb;
+
+                            index ++;
                         }
-                        /*  else
-                          {
-                              pz = 0;
-                              px = 0;
-                              py = 0;
-                          }
-                        */
-                        //cloudOut->points.push_back (point);
-                        cloudOut->points[index].x = px;
-                        cloudOut->points[index].y = py;
-                        cloudOut->points[index].z = pz;
-                        cloudOut->points[index].r = pr;
-                        cloudOut->points[index].g = pg;
-                        cloudOut->points[index].b = pb;
 
-                        index ++;
-                    }
-
-                pcl::PCLPointCloud2::Ptr cloudOutROS(new pcl::PCLPointCloud2); //output ROS message
-                pcl::toPCLPointCloud2 (*cloudOut, *cloudOutROS);
-                cloudOutROS->header.frame_id = "orsens_camera";
-                pub_cloud.publish(cloudOutROS);
+                    pcl::PCLPointCloud2::Ptr cloudOutROS(new pcl::PCLPointCloud2); //output ROS message
+                    pcl::toPCLPointCloud2 (*cloudOut, *cloudOutROS);
+                    cloudOutROS->header.frame_id = frame_id;
+                    pub_cloud.publish(cloudOutROS);
+                }
             }
-        }
-        if(publish_nearest_point)
-        {
-            ScenePoint scene_point = orsens_device.getNearestPoint();
-            obs.header.stamp = time;
-            obs.header.frame_id = "orsens_camera";
-            obs.u = scene_point.pt_image.x;
-            obs.v = scene_point.pt_image.y;
-            obs.pt.x = scene_point.pt_world.x;
-            obs.pt.y = scene_point.pt_world.y;
-            obs.pt.z = scene_point.pt_world.z;
-            pub_nearest_point.publish(obs);
-        }
-        if(publish_segmentation_mask)
-        {
-            Mat mask = orsens_device.getSegmentationMask();
-            if (!mask.empty())
+
+            if(publish_nearest_point)
             {
-                fillImage(ros_mask, "mono8", mask.rows, mask.cols, mask.cols, mask.data);
+                ScenePoint scene_point = orsens_device.getNearestPoint();
 
-                ros_mask.header.stamp = time;
-                ros_mask.header.frame_id = "orsens_camera";
+                obs.header.stamp = time;
+                obs.header.frame_id = frame_id;
+                obs.u = scene_point.pt_image.x;
+                obs.v = scene_point.pt_image.y;
+                obs.pt.x = scene_point.pt_world.x;
+                obs.pt.y = scene_point.pt_world.y;
+                obs.pt.z = scene_point.pt_world.z;
 
-                pub_segmentation_mask.publish(ros_mask);
+                pub_nearest_point.publish(obs);
+            }
+
+            if(publish_segmentation_mask)
+            {
+                Mat mask = orsens_device.getSegmentationMask();
+
+                if (!mask.empty())
+                {
+                    fillImage(ros_mask, "mono8", mask.rows, mask.cols, mask.cols, mask.data);
+
+                    ros_mask.header.stamp = time;
+                    ros_mask.header.frame_id = frame_id;
+
+                    pub_segmentation_mask.publish(ros_mask);
+                }
+
             }
 
         }
 
         ros::spinOnce();
         loop_rate.sleep();
-
     }
 
     sigint_handler(0);
