@@ -91,7 +91,8 @@ public:
 
     static CaptureMode captureModeFromString(const std::string& str);
 
-    bool start(CaptureMode capture_mode=CAPTURE_DEPTH_ONLY, string data_path="../data", uint16_t color_width=640, uint16_t depth_width=640, uint8_t color_rate=15, uint8_t depth_rate=15, bool compress_color=false, bool compress_depth=false, uint16_t baseline=60);
+    bool start(CaptureMode capture_mode=CAPTURE_DEPTH_ONLY, string data_path="../data", uint16_t color_width=640, uint16_t depth_width=640, uint8_t color_rate=15, uint8_t depth_rate=15,
+               bool compress_color=false, bool compress_depth=false, uint16_t baseline=60);
     bool stop();
     bool grabSensorData();
 

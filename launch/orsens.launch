@@ -3,7 +3,7 @@
     <param name="capture_mode" value="depth_left"/>    
     <param name="color_width" value="640"/>
     <param name="depth_width" value="640"/> 
-    <param name="compress_color" value="true"/> 
+    <param name="compress_color" value="false"/> 
     <param name="compress_depth" value="false"/> 
     <param name="publish_depth" value="true"/> 
     <param name="publish_cloud" value="true"/> 

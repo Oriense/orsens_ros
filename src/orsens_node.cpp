@@ -53,6 +53,7 @@ void sigint_handler(int sig)
 {
     working = false;
     orsens_device.stop();
+    printf("stopped\n");
     ros::shutdown();
 }
 
@@ -124,7 +125,7 @@ int main (int argc, char** argv)
             Mat color = orsens_device.getLeft();
             if (!color.empty())
             {
-                fillImage(ros_left, "rgb8", color.rows, color.cols, 3 * color.cols, color.data);
+                fillImage(ros_left, "bgr8", color.rows, color.cols, 3 * color.cols, color.data);
 
                 ros_left.header.stamp = time;
                 ros_left.header.frame_id = "orsens_camera";
