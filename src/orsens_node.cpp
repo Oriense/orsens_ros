@@ -45,7 +45,17 @@ ros::Publisher pub_cloud;
 ros::Publisher pub_nearest_point;
 ros::Publisher pub_segmentation_mask;
 
+sensor_msgs::CameraInfo l_info_msg;
+sensor_msgs::CameraInfo r_info_msg;
+
 Orsens orsens_device;
+
+string capture_mode_string;
+    string data_path;
+    int color_width, depth_width;
+    int color_rate, depth_rate;
+    bool compress_color, compress_depth;
+    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_nearest_point, publish_segmentation_mask;
 
 bool working = false;
 
@@ -57,19 +67,73 @@ void sigint_handler(int sig)
     ros::shutdown();
 }
 
+bool load_calibration()
+{
+    char cal_left[1024], cal_right[1024];
+
+    sprintf(cal_left, "%s/calibration/caminfo_left.yml", data_path.c_str());
+    sprintf(cal_right, "%s/calibration/caminfo_right.yml", data_path.c_str());
+
+    ROS_INFO("cal: %s\n", cal_left);
+
+    ///FIXME check files
+    cv::FileStorage fs_left(cal_left, cv::FileStorage::READ);
+    cv::FileStorage fs_right(cal_right, cv::FileStorage::READ);
+
+    cv::Mat Cl, Dl, Rl, Pl, Cr, Dr, Rr, Pr;
+    fs_left["camera_matrix"] >> Cl;
+    fs_left["distortion_coefficients"] >> Dl;
+    fs_left["projection_matrix"] >> Pl;
+    fs_left["rectification_matrix"] >> Rl;
+    fs_right["camera_matrix"] >> Cr;
+    fs_right["distortion_coefficients"] >> Dr;
+    fs_right["projection_matrix"] >> Pr;
+    fs_right["rectification_matrix"] >> Rr;
+    int index = 0;
+    for (int i=0; i<Cl.rows; i++)
+        for(int j=0; j<Cl.cols; j++)
+        {
+            l_info_msg.K[index] = Cl.at<double>(i,j);
+            r_info_msg.K[index] = Cr.at<double>(i,j);
+            index++;
+        }
+    for (int i=0; i<Dl.rows; i++)
+        for(int j=0; j<Dl.cols; j++)
+        {
+            l_info_msg.D.push_back(Dl.at<double>(i,j));
+            r_info_msg.D.push_back(Dr.at<double>(i,j));
+        }
+    index=0;
+    for (int i=0; i<Rl.rows; i++)
+        for(int j=0; j<Rl.cols; j++)
+        {
+            l_info_msg.R[index] = Rl.at<double>(i,j);
+            r_info_msg.R[index] = Rr.at<double>(i,j);
+            index++;
+        }
+    index=0;
+    for (int i=0; i<Pl.rows; i++)
+        for(int j=0; j<Pl.cols; j++)
+        {
+            l_info_msg.P[index] = Pl.at<double>(i,j);
+            r_info_msg.P[index] = Pr.at<double>(i,j);
+            index++;
+        }
+
+    fs_left["distortion_model"] >> l_info_msg.distortion_model;
+    fs_right["distortion_model"] >> r_info_msg.distortion_model;
+
+    fs_left.release();
+    fs_right.release();
+
+    return true;
+}
 
 int main (int argc, char** argv)
 {
     // Initialize ROS
     ros::init (argc, argv, "orsens_node");
     ros::NodeHandle nh;
-
-    string capture_mode_string;
-    string data_path;
-    int color_width, depth_width;
-    int color_rate, depth_rate;
-    bool compress_color, compress_depth;
-    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_nearest_point, publish_segmentation_mask;
 
     std::string node_name = ros::this_node::getName();
 
@@ -94,12 +158,14 @@ int main (int argc, char** argv)
         return -1;
     }
 
+    bool caminfo_loaded = load_calibration();
+
     // Create a ROS publishers for the output messages
     pub_left = nh.advertise<sensor_msgs::Image> ("/orsens/left", 1);
     pub_right = nh.advertise<sensor_msgs::Image> ("/orsens/right", 1);
     pub_disp = nh.advertise<sensor_msgs::Image> ("/orsens/disparity", 1); // 0-255
     pub_depth = nh.advertise<sensor_msgs::Image> ("/orsens/depth", 1); // uint16 in mm
-//    pub_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/camera_info", 1);
+    pub_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/camera_info", 1);
     pub_cloud = nh.advertise<pcl::PCLPointCloud2>("/orsens/cloud", 1);
     pub_nearest_point = nh.advertise<orsens::NearestObstacle>("/orsens/nearest_point", 1);
     pub_segmentation_mask = nh.advertise<sensor_msgs::Image>("/orsens/segmentation_mask", 1);
@@ -141,6 +207,24 @@ int main (int argc, char** argv)
 
         ros::Time time = ros::Time::now();
 
+        if (caminfo_loaded)
+        {
+            l_info_msg.header.stamp = time;
+            r_info_msg.header.stamp = time;
+            l_info_msg.header.frame_id = frame_id;
+            r_info_msg.header.frame_id = frame_id;
+
+                l_info_msg.height = color_width*3/4;
+    l_info_msg.width = color_width;
+
+
+    r_info_msg.height = color_width*3/4;
+    r_info_msg.width = color_width;
+
+            pub_info.publish(l_info_msg);
+          //  pub_info_right.publish(r_info_msg);
+        }
+
         if (!left.empty())
         {
             fillImage(ros_left, "bgr8", left.rows, left.cols, left.step.buf[0], left.data);
@@ -166,6 +250,7 @@ int main (int argc, char** argv)
             fillImage(ros_disp, "mono8", disp.rows, disp.cols, disp.cols, disp.data);
 
             ros_disp.header.stamp = time;
+            ros_disp.header.frame_id = frame_id;
 
             pub_disp.publish(ros_disp);
 
@@ -174,9 +259,10 @@ int main (int argc, char** argv)
                 Mat depth = orsens_device.getDepth();
                 if (!depth.empty())
                 {
-                    fillImage(ros_depth, "mono16", depth.rows, depth.cols, 2*depth.cols, depth.data);
+                    fillImage(ros_depth, "16UC1", depth.rows, depth.cols, 2*depth.cols, depth.data);
 
                     ros_depth.header.stamp = time;
+                    ros_depth.header.frame_id = frame_id;
 
                     pub_depth.publish(ros_depth);
                 }
