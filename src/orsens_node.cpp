@@ -14,8 +14,7 @@
 #include <camera_info_manager/camera_info_manager.h>
 #include <sstream>
 
-
-#include <pcl_conversions/pcl_conversions.h> //!
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <signal.h>
 
@@ -40,7 +39,8 @@ ros::Publisher pub_right;
 ros::Publisher pub_disp;
 ros::Publisher pub_depth;
 ros::Publisher pub_disp_filtered;
-ros::Publisher pub_info;
+ros::Publisher pub_left_info;
+ros::Publisher pub_right_info;
 ros::Publisher pub_cloud;
 ros::Publisher pub_nearest_point;
 ros::Publisher pub_segmentation_mask;
@@ -51,11 +51,11 @@ sensor_msgs::CameraInfo r_info_msg;
 Orsens orsens_device;
 
 string capture_mode_string;
-    string data_path;
-    int color_width, depth_width;
-    int color_rate, depth_rate;
-    bool compress_color, compress_depth;
-    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_nearest_point, publish_segmentation_mask;
+string data_path;
+int color_width, depth_width;
+int color_rate, depth_rate;
+bool compress_color, compress_depth;
+bool publish_color, publish_disp, publish_depth, publish_cloud, publish_nearest_point, publish_segmentation_mask, publish_left_cam_info, publish_right_cam_info;
 
 bool working = false;
 
@@ -147,6 +147,8 @@ int main (int argc, char** argv)
     nh.param<bool>(node_name+"/compress_depth", compress_depth, false);
     nh.param<bool>(node_name+"/publish_depth", publish_depth, true);
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
+    nh.param<bool>(node_name+"/publish_left_cam_info", publish_left_cam_info, true);
+    nh.param<bool>(node_name+"/publish_right_cam_info", publish_right_cam_info, false);
     nh.param<bool>(node_name+"/publish_nearest_point", publish_nearest_point, false);
     nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
 
@@ -158,14 +160,13 @@ int main (int argc, char** argv)
         return -1;
     }
 
-    bool caminfo_loaded = load_calibration();
-
     // Create a ROS publishers for the output messages
     pub_left = nh.advertise<sensor_msgs::Image> ("/orsens/left", 1);
     pub_right = nh.advertise<sensor_msgs::Image> ("/orsens/right", 1);
     pub_disp = nh.advertise<sensor_msgs::Image> ("/orsens/disparity", 1); // 0-255
     pub_depth = nh.advertise<sensor_msgs::Image> ("/orsens/depth", 1); // uint16 in mm
-    pub_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/camera_info", 1);
+    pub_left_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/left_camera_info", 1);
+    pub_right_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/right_camera_info", 1);
     pub_cloud = nh.advertise<pcl::PCLPointCloud2>("/orsens/cloud", 1);
     pub_nearest_point = nh.advertise<orsens::NearestObstacle>("/orsens/nearest_point", 1);
     pub_segmentation_mask = nh.advertise<sensor_msgs::Image>("/orsens/segmentation_mask", 1);
@@ -175,6 +176,21 @@ int main (int argc, char** argv)
 
     sensor_msgs::Image ros_left,  ros_right, ros_disp, ros_depth, ros_mask;
     orsens::NearestObstacle obs;
+
+    bool caminfo_loaded = load_calibration();
+
+    if (caminfo_loaded)
+    {
+        l_info_msg.header.frame_id = frame_id;
+
+        l_info_msg.height = color_width*3/4;
+        l_info_msg.width = color_width;
+
+        r_info_msg.header.frame_id = frame_id;
+
+        r_info_msg.height = color_width*3/4;
+        r_info_msg.width = color_width;
+    }
 
     working = true;
 
@@ -209,20 +225,19 @@ int main (int argc, char** argv)
 
         if (caminfo_loaded)
         {
-            l_info_msg.header.stamp = time;
-            r_info_msg.header.stamp = time;
-            l_info_msg.header.frame_id = frame_id;
-            r_info_msg.header.frame_id = frame_id;
+            if (publish_left_cam_info)
+            {
+                l_info_msg.header.stamp = time;
+                pub_left_info.publish(l_info_msg);
 
-                l_info_msg.height = color_width*3/4;
-    l_info_msg.width = color_width;
+            }
 
+            if (publish_right_cam_info)
+            {
+                r_info_msg.header.stamp = time;
+                pub_right_info.publish(r_info_msg);
 
-    r_info_msg.height = color_width*3/4;
-    r_info_msg.width = color_width;
-
-            pub_info.publish(l_info_msg);
-          //  pub_info_right.publish(r_info_msg);
+            }
         }
 
         if (!left.empty())
