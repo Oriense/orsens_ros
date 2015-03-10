@@ -106,12 +106,16 @@ include_directories(include
   ${avcodec_INCLUDE_DIRS}
   ${swscale_INCLUDE_DIRS}
 )
-LINK_DIRECTORIES(lib)
+#LINK_DIRECTORIES(lib)
 
 ## Declare a cpp executable
 add_executable(orsens_node src/orsens_node.cpp)
+find_library(ORSENS
+    NAMES orsens
+    HINTS "lib"
+)
 target_link_libraries(orsens_node
-  orsens
+  "${ORSENS}"
   ${avutil_LIBRARIES}  
   ${avcodec_LIBRARIES}
   ${swscale_LIBRARIES}

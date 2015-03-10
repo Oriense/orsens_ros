@@ -86,6 +86,7 @@ int main (int argc, char** argv)
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
     nh.param<bool>(node_name+"/publish_nearest_point", publish_nearest_point, false);
     nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
+    bool pub_obstacle = true;
 
     Orsens::CaptureMode capture_mode = Orsens::captureModeFromString(capture_mode_string);
 
@@ -217,14 +218,35 @@ int main (int argc, char** argv)
         }
         if(publish_nearest_point)
         {
-            ScenePoint scene_point = orsens_device.getNearestPoint();
+            if(pub_obstacle)
+            {
+                Obstacle obstacle = orsens_device.getNearestObstacle();
+                obs.u = obstacle.centre.x;
+                obs.v = obstacle.centre.y;
+                obs.centre_pt.x = obstacle.centre_world.x;
+                obs.centre_pt.y = obstacle.centre_world.y;
+                obs.centre_pt.z = obstacle.centre_world.z;
+                obs.dist = obstacle.dist;
+                obs.angle = obstacle.angle;
+                obs.min_pt.x = obstacle.min_pt_world.x;
+                obs.min_pt.y = obstacle.min_pt_world.y;
+                obs.min_pt.z = obstacle.min_pt_world.z;
+                obs.max_pt.x = obstacle.max_pt_world.x;
+                obs.max_pt.y = obstacle.max_pt_world.y;
+                obs.max_pt.z = obstacle.max_pt_world.z;
+            }
+            else
+            {
+                ScenePoint scene_point = orsens_device.getNearestPoint();
+                obs.u = scene_point.pt_image.x;
+                obs.v = scene_point.pt_image.y;
+                obs.centre_pt.x = scene_point.pt_world.x;
+                obs.centre_pt.y = scene_point.pt_world.y;
+                obs.centre_pt.z = scene_point.pt_world.z;
+            }
+
             obs.header.stamp = time;
             obs.header.frame_id = "orsens_camera";
-            obs.u = scene_point.pt_image.x;
-            obs.v = scene_point.pt_image.y;
-            obs.pt.x = scene_point.pt_world.x;
-            obs.pt.y = scene_point.pt_world.y;
-            obs.pt.z = scene_point.pt_world.z;
             pub_nearest_point.publish(obs);
         }
         if(publish_segmentation_mask)
