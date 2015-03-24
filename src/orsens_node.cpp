@@ -80,53 +80,59 @@ bool load_calibration()
     cv::FileStorage fs_left(cal_left, cv::FileStorage::READ);
     cv::FileStorage fs_right(cal_right, cv::FileStorage::READ);
 
-    cv::Mat Cl, Dl, Rl, Pl, Cr, Dr, Rr, Pr;
-    fs_left["camera_matrix"] >> Cl;
-    fs_left["distortion_coefficients"] >> Dl;
-    fs_left["projection_matrix"] >> Pl;
-    fs_left["rectification_matrix"] >> Rl;
-    fs_right["camera_matrix"] >> Cr;
-    fs_right["distortion_coefficients"] >> Dr;
-    fs_right["projection_matrix"] >> Pr;
-    fs_right["rectification_matrix"] >> Rr;
-    int index = 0;
-    for (int i=0; i<Cl.rows; i++)
-        for(int j=0; j<Cl.cols; j++)
-        {
-            l_info_msg.K[index] = Cl.at<double>(i,j);
-            r_info_msg.K[index] = Cr.at<double>(i,j);
-            index++;
-        }
-    for (int i=0; i<Dl.rows; i++)
-        for(int j=0; j<Dl.cols; j++)
-        {
-            l_info_msg.D.push_back(Dl.at<double>(i,j));
-            r_info_msg.D.push_back(Dr.at<double>(i,j));
-        }
-    index=0;
-    for (int i=0; i<Rl.rows; i++)
-        for(int j=0; j<Rl.cols; j++)
-        {
-            l_info_msg.R[index] = Rl.at<double>(i,j);
-            r_info_msg.R[index] = Rr.at<double>(i,j);
-            index++;
-        }
-    index=0;
-    for (int i=0; i<Pl.rows; i++)
-        for(int j=0; j<Pl.cols; j++)
-        {
-            l_info_msg.P[index] = Pl.at<double>(i,j);
-            r_info_msg.P[index] = Pr.at<double>(i,j);
-            index++;
-        }
+    if (fs_left.isOpened() && fs_right.isOpened())
+    {
+        cv::Mat Cl, Dl, Rl, Pl, Cr, Dr, Rr, Pr;
+        fs_left["camera_matrix"] >> Cl;
+        fs_left["distortion_coefficients"] >> Dl;
+        fs_left["projection_matrix"] >> Pl;
+        fs_left["rectification_matrix"] >> Rl;
+        fs_right["camera_matrix"] >> Cr;
+        fs_right["distortion_coefficients"] >> Dr;
+        fs_right["projection_matrix"] >> Pr;
+        fs_right["rectification_matrix"] >> Rr;
+        int index = 0;
+        for (int i=0; i<Cl.rows; i++)
+            for(int j=0; j<Cl.cols; j++)
+            {
+                l_info_msg.K[index] = Cl.at<double>(i,j);
+                r_info_msg.K[index] = Cr.at<double>(i,j);
+                index++;
+            }
+        for (int i=0; i<Dl.rows; i++)
+            for(int j=0; j<Dl.cols; j++)
+            {
+                l_info_msg.D.push_back(Dl.at<double>(i,j));
+                r_info_msg.D.push_back(Dr.at<double>(i,j));
+            }
+        index=0;
+        for (int i=0; i<Rl.rows; i++)
+            for(int j=0; j<Rl.cols; j++)
+            {
+                l_info_msg.R[index] = Rl.at<double>(i,j);
+                r_info_msg.R[index] = Rr.at<double>(i,j);
+                index++;
+            }
+        index=0;
+        for (int i=0; i<Pl.rows; i++)
+            for(int j=0; j<Pl.cols; j++)
+            {
+                l_info_msg.P[index] = Pl.at<double>(i,j);
+                r_info_msg.P[index] = Pr.at<double>(i,j);
+                index++;
+            }
 
-    fs_left["distortion_model"] >> l_info_msg.distortion_model;
-    fs_right["distortion_model"] >> r_info_msg.distortion_model;
+        fs_left["distortion_model"] >> l_info_msg.distortion_model;
+        fs_right["distortion_model"] >> r_info_msg.distortion_model;
 
-    fs_left.release();
-    fs_right.release();
+        fs_left.release();
+        fs_right.release();
 
-    return true;
+        return true;
+
+    }
+    else
+        return false;
 }
 
 int main (int argc, char** argv)
@@ -178,10 +184,15 @@ int main (int argc, char** argv)
     sensor_msgs::Image ros_left,  ros_right, ros_disp, ros_depth, ros_mask;
     orsens::NearestObstacle obs;
 
-    bool caminfo_loaded = load_calibration();
+    bool caminfo_loaded = false;
 
-    if (caminfo_loaded)
+    if (publish_left_cam_info || publish_right_cam_info)
     {
+        caminfo_loaded = load_calibration();
+        if (!caminfo_loaded)
+            ROS_WARN("Failed to load calibration data, check path");
+        else
+            {
         l_info_msg.header.frame_id = frame_id;
 
         l_info_msg.height = color_width*3/4;
@@ -191,6 +202,7 @@ int main (int argc, char** argv)
 
         r_info_msg.height = color_width*3/4;
         r_info_msg.width = color_width;
+    }
     }
 
     working = true;
@@ -335,36 +347,36 @@ int main (int argc, char** argv)
 
             if(publish_nearest_point)
             {
-            if(pub_obstacle)
-            {
-                Obstacle obstacle = orsens_device.getNearestObstacle();
-                obs.u = obstacle.centre.x;
-                obs.v = obstacle.centre.y;
-                obs.centre_pt.x = obstacle.centre_world.x;
-                obs.centre_pt.y = obstacle.centre_world.y;
-                obs.centre_pt.z = obstacle.centre_world.z;
-                obs.dist = obstacle.dist;
-                obs.angle = obstacle.angle;
-                obs.min_pt.x = obstacle.min_pt_world.x;
-                obs.min_pt.y = obstacle.min_pt_world.y;
-                obs.min_pt.z = obstacle.min_pt_world.z;
-                obs.max_pt.x = obstacle.max_pt_world.x;
-                obs.max_pt.y = obstacle.max_pt_world.y;
-                obs.max_pt.z = obstacle.max_pt_world.z;
-            }
-            else
-            {
-                ScenePoint scene_point = orsens_device.getNearestPoint();
+                if(pub_obstacle)
+                {
+                    Obstacle obstacle = orsens_device.getNearestObstacle();
+                    obs.u = obstacle.centre.x;
+                    obs.v = obstacle.centre.y;
+                    obs.centre_pt.x = obstacle.centre_world.x;
+                    obs.centre_pt.y = obstacle.centre_world.y;
+                    obs.centre_pt.z = obstacle.centre_world.z;
+                    obs.dist = obstacle.dist;
+                    obs.angle = obstacle.angle;
+                    obs.min_pt.x = obstacle.min_pt_world.x;
+                    obs.min_pt.y = obstacle.min_pt_world.y;
+                    obs.min_pt.z = obstacle.min_pt_world.z;
+                    obs.max_pt.x = obstacle.max_pt_world.x;
+                    obs.max_pt.y = obstacle.max_pt_world.y;
+                    obs.max_pt.z = obstacle.max_pt_world.z;
+                }
+                else
+                {
+                    ScenePoint scene_point = orsens_device.getNearestPoint();
 
-                obs.u = scene_point.pt_image.x;
-                obs.v = scene_point.pt_image.y;
-                obs.centre_pt.x = scene_point.pt_world.x;
-                obs.centre_pt.y = scene_point.pt_world.y;
-                obs.centre_pt.z = scene_point.pt_world.z;
-            }
+                    obs.u = scene_point.pt_image.x;
+                    obs.v = scene_point.pt_image.y;
+                    obs.centre_pt.x = scene_point.pt_world.x;
+                    obs.centre_pt.y = scene_point.pt_world.y;
+                    obs.centre_pt.z = scene_point.pt_world.z;
+                }
 
-            obs.header.stamp = time;
-            obs.header.frame_id = "orsens_camera";
+                obs.header.stamp = time;
+                obs.header.frame_id = "orsens_camera";
                 pub_nearest_point.publish(obs);
             }
 

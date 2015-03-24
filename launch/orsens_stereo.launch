@@ -3,6 +3,8 @@
     <param name="capture_mode" value="left_right"/>    
     <param name="color_width" value="640"/>
     <param name="compress_color" value="false"/>
+    <param name="publish_left_cam_info" value="true"/>
+    <param name="publish_right_cam_info" value="true"/>
   </node> 
   <node pkg="image_view" type="image_view" name="left">
     <remap from="image" to="orsens/left" />

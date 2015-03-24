@@ -27,7 +27,12 @@ struct SceneObject
 
 struct Human : SceneObject
 {
+    string gender;
+    uint8_t age;
 
+    Rect face_rect;
+    Point left_eye_pos;
+    Point right_eye_pos;
 };
 
 struct Obstacle : SceneObject
@@ -100,6 +105,10 @@ public:
     bool start(CaptureMode capture_mode=CAPTURE_DEPTH_ONLY, string data_path="../data", uint16_t color_width=640, uint16_t depth_width=640, uint8_t color_rate=15, uint8_t depth_rate=15,
                bool compress_color=false, bool compress_depth=false, uint16_t baseline=60);
     bool stop();
+
+    bool initBiometrics(bool init_gender_estimation=true, bool init_age_estimation=false);
+    void deinitBiometrics();
+
     bool grabSensorData();
 
     //setting parametrs
@@ -137,6 +146,8 @@ public:
 
     //detection
     std::vector<Human> getHumans();
+    //Human getNearestHumanBiometrics(bool detect_gender=true, bool detect_age=false);
+    bool getNearestHumanBiometrics(Human &human);
 
     //misc
     Scalar dist2rgb(uint16_t dist);
