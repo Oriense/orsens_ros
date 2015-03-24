@@ -2,6 +2,7 @@
   <node pkg="orsens" type="orsens_node" name="orsens"  output="screen" respawn="true">
     <param name="capture_mode" value="left_right"/>    
     <param name="color_width" value="640"/>
+    <param name="data_path" value=" $(find orsens)/data"/>
     <param name="compress_color" value="false"/>
     <param name="publish_left_cam_info" value="true"/>
     <param name="publish_right_cam_info" value="true"/>

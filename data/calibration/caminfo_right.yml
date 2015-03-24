@@ -1,25 +1,25 @@
 %YAML:1.0
 image_width: 640
 image_height: 480
-camera_name: narrow_stereo/right
+camera_name: orsens/right
 camera_matrix: !!opencv-matrix
   rows: 3
   cols: 3
   dt: d
-  data: [1097.839477, 0, 191.922476, 0, 1094.560387, 144.940757, 0, 0, 1]
+  data: [1192.501258, 0.000000, 389.401682, 0.000000, 1192.371239, 284.333016, 0.000000, 0.000000, 1.000000]
 distortion_model: plumb_bob
 distortion_coefficients: !!opencv-matrix
   rows: 1
   cols: 5
   dt: d
-  data: [0.048213, 3.672057, -0.044046, -0.044943, 0]
+  data: [-0.265353, 0.417579, 0.007794, 0.011002, 0.000000]
 rectification_matrix: !!opencv-matrix
   rows: 3
   cols: 3
   dt: d
-  data: [0.969128, -0.01154, -0.246289, 0.007704, 0.999834, -0.01653, 0.246438, 0.014122, 0.969056]
+  data: [0.998131, -0.031218, -0.052538, 0.030919, 0.999501, -0.006492, 0.052714, 0.004856, 0.998598]
 projection_matrix: !!opencv-matrix
   rows: 3
   cols: 4
   dt: d
-  data: [700, 0, 320, -84, 0, 700, 240, 0, 0, 0, 1, 0]
+  data: [1312.893288, 0.000000, 440.811415, -746.658500, 0.000000, 1312.893288, 296.913277, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]
