@@ -168,12 +168,12 @@ int main (int argc, char** argv)
     }
 
     // Create a ROS publishers for the output messages
-    pub_left = nh.advertise<sensor_msgs::Image> ("/orsens/left", 1);
-    pub_right = nh.advertise<sensor_msgs::Image> ("/orsens/right", 1);
+    pub_left = nh.advertise<sensor_msgs::Image> ("/orsens/left/image_raw", 1);
+    pub_right = nh.advertise<sensor_msgs::Image> ("/orsens/right/image_raw", 1);
     pub_disp = nh.advertise<sensor_msgs::Image> ("/orsens/disparity", 1); // 0-255
     pub_depth = nh.advertise<sensor_msgs::Image> ("/orsens/depth", 1); // uint16 in mm
-    pub_left_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/left_camera_info", 1);
-    pub_right_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/right_camera_info", 1);
+    pub_left_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/left/camera_info", 1);
+    pub_right_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/right/camera_info", 1);
     pub_cloud = nh.advertise<pcl::PCLPointCloud2>("/orsens/cloud", 1);
     pub_nearest_point = nh.advertise<orsens::NearestObstacle>("/orsens/nearest_point", 1);
     pub_segmentation_mask = nh.advertise<sensor_msgs::Image>("/orsens/segmentation_mask", 1);
