@@ -1,0 +1,29 @@
+<launch>
+  <node pkg="orsens" type="orsens_node" name="orsens"  output="screen" respawn="true">
+    <param name="capture_mode" value="left_right"/>    
+    <param name="color_width" value="640"/>
+    <param name="data_path" value=" $(find orsens)/data"/>
+    <param name="compress_color" value="false"/>
+    <param name="publish_left_cam_info" value="true"/>
+    <param name="publish_right_cam_info" value="true"/>
+  </node> 
+  <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc">
+    <remap from="left/image_raw"    to="/orsens/left/image_raw"/>
+    <remap from="left/camera_info"  to="/orsens/left/camera_info"/>
+    <remap from="right/image_raw"   to="/orsens/right/image_raw"/>
+    <remap from="right/camera_info" to="/orsens/right/camera_info"/>
+    <param name="disparity_range" value="64"/>
+  </node>
+  <node pkg="image_view" type="image_view" name="left">
+    <remap from="image" to="orsens/left/image_raw" />
+    <param name="autosize" value="true" />
+  </node> 
+  <node pkg="image_view" type="image_view" name="right">
+    <remap from="image" to="orsens/right/image_raw" />
+    <param name="autosize" value="true" />
+  </node>     
+  <node pkg="image_view" type="disparity_view" name="disparity">
+   <remap from="image" to="disparity" />
+   <param name="autosize" value="true" />
+  </node> 
+</launch>
