@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   image_geometry
   cv_bridge
+  camera_info_manager  
   pcl_ros
   pcl_conversions
 )

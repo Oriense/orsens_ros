@@ -1,0 +1,12 @@
+<launch>
+  <node pkg="orsens" type="orsens_node" name="orsens"  output="screen" respawn="true">
+    <param name="capture_mode" value="left_right"/>    
+    <param name="color_width" value="640"/>
+    <param name="data_path" value=" $(find orsens)/data"/>
+    <param name="compress_color" value="false"/>
+    <param name="publish_left_cam_info" value="true"/>
+    <param name="publish_right_cam_info" value="true"/>
+  </node> 
+  <node pkg="camera_calibration" type="cameracalibrator.py" name="calibration" args="--size 9x6 --square 0.36 --no-service-check right:=/orsens/right/image_raw left:=/orsens/left/image_raw">
+  </node> 
+</launch>

@@ -9,7 +9,7 @@ Panels:
         - /Grid1
         - /PointCloud21
         - /MapCloud1
-        - /MapCloud1/Status1
+        - /PointCloud22
       Splitter Ratio: 0.5
     Tree Height: 722
   - Class: rviz/Selection
@@ -30,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -122,6 +122,35 @@ Visualization Manager:
       Size (m): 0.01
       Style: Flat Squares
       Topic: /rtabmap/mapData
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: ""
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: ""
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.01
+      Style: Flat Squares
+      Topic: /rtabmap/assembled_clouds
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
