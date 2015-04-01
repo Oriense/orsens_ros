@@ -2,10 +2,12 @@
   <node pkg="orsens" type="orsens_node" name="orsens"  output="screen" respawn="true">
     <param name="capture_mode" value="left_right"/>    
     <param name="color_width" value="640"/>
-    <param name="data_path" value=" $(find orsens)/data"/>
+    <param name="data_path" value="$(find orsens)/data"/>
     <param name="compress_color" value="false"/>
-    <param name="publish_left_cam_info" value="true"/>
-    <param name="publish_right_cam_info" value="true"/>
+    <param name="publish_left_camera_info" value="true"/>
+    <param name="publish_right_camera_info" value="true"/>
+    <param name="left_camera_info_url" value="file://$(find orsens)/data/calibration/caminfo_left_old.yml"/>
+    <param name="right_camera_info_url" value="file://$(find orsens)/data/calibration/caminfo_right_old.yml"/>
   </node> 
   <node pkg="image_view" type="image_view" name="left">
     <remap from="image" to="orsens/left/image_raw" />

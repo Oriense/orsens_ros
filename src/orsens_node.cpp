@@ -61,6 +61,7 @@ int main (int argc, char** argv)
     string node_name = ros::this_node::getName();
 
     string frame_id;
+    string camera_namespace;
     string left_camera_info_url, right_camera_info_url;
     string capture_mode_string;
     string data_path;
@@ -74,6 +75,7 @@ int main (int argc, char** argv)
     nh.param<string>(node_name+"/left_camera_info_url", left_camera_info_url, "file://"+data_path+"/calibration/caminfo_left.yml");
     nh.param<string>(node_name+"/right_camera_info_url", right_camera_info_url, "file://"+data_path+"/calibration/caminfo_right.yml");
     nh.param<string>(node_name+"/frame_id", frame_id, "orsens_camera");
+    nh.param<string>(node_name+"/camera_namespace", camera_namespace, "/orsens/");
     nh.param<int>(node_name+"/color_width", color_width, 640);
     nh.param<int>(node_name+"/depth_width", depth_width, 640);
     nh.param<int>(node_name+"/color_rate", color_rate, 15);
@@ -82,9 +84,9 @@ int main (int argc, char** argv)
     nh.param<bool>(node_name+"/compress_depth", compress_depth, false);
     nh.param<bool>(node_name+"/publish_depth", publish_depth, true);
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
-    nh.param<bool>(node_name+"/publish_left_camera_info", publish_left_cam_info, true);
+    nh.param<bool>(node_name+"/publish_left_camera_info", publish_left_cam_info, false);
     nh.param<bool>(node_name+"/publish_right_camera_info", publish_right_cam_info, false);
-    nh.param<bool>(node_name+"/publish_nearest_point", publish_nearest_point, false);
+    nh.param<bool>(node_name+"/publish_nearest_obstacle", publish_nearest_point, false);
     nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
     bool pub_obstacle = true;
 
@@ -97,15 +99,15 @@ int main (int argc, char** argv)
     }
 
     // Create a ROS publishers for the output messages
-    ros::Publisher pub_left = nh.advertise<sensor_msgs::Image> ("/orsens/left/image_raw", 1);
-    ros::Publisher pub_right = nh.advertise<sensor_msgs::Image> ("/orsens/right/image_raw", 1);
-    ros::Publisher pub_disp = nh.advertise<sensor_msgs::Image> ("/orsens/disp", 1); // 0-255
-    ros::Publisher pub_depth = nh.advertise<sensor_msgs::Image> ("/orsens/depth", 1); // uint16 in mm
-    ros::Publisher pub_left_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/left/camera_info", 1);
-    ros::Publisher pub_right_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/right/camera_info", 1);
-    ros::Publisher pub_cloud = nh.advertise<pcl::PCLPointCloud2>("/orsens/cloud", 1);
-    ros::Publisher pub_nearest_point = nh.advertise<orsens::NearestObstacle>("/orsens/nearest_obstacle", 1);
-    ros::Publisher pub_segmentation_mask = nh.advertise<sensor_msgs::Image>("/orsens/segmentation_mask", 1);
+    ros::Publisher pub_left = nh.advertise<sensor_msgs::Image> (camera_namespace+"left/image_raw", 1);
+    ros::Publisher pub_right = nh.advertise<sensor_msgs::Image> (camera_namespace+"right/image_raw", 1);
+    ros::Publisher pub_disp = nh.advertise<sensor_msgs::Image> (camera_namespace+"disp", 1); // 0-255
+    ros::Publisher pub_depth = nh.advertise<sensor_msgs::Image> (camera_namespace+"depth", 1); // uint16 in mm
+    ros::Publisher pub_left_info = nh.advertise<sensor_msgs::CameraInfo>(camera_namespace+"left/camera_info", 1);
+    ros::Publisher pub_right_info = nh.advertise<sensor_msgs::CameraInfo>(camera_namespace+"right/camera_info", 1);
+    ros::Publisher pub_cloud = nh.advertise<pcl::PCLPointCloud2>(camera_namespace+"cloud", 1);
+    ros::Publisher pub_nearest_point = nh.advertise<orsens::NearestObstacle>(camera_namespace+"nearest_obstacle", 1);
+    ros::Publisher pub_segmentation_mask = nh.advertise<sensor_msgs::Image>(camera_namespace+"segmentation_mask", 1);
 
     ros::Rate loop_rate(15);
 
@@ -113,7 +115,7 @@ int main (int argc, char** argv)
     sensor_msgs::CameraInfo l_info_msg, r_info_msg;
     orsens::NearestObstacle obs;
 
-    bool caminfo_loaded = true;
+    bool caminfo_loaded = false;
 
     if (publish_left_cam_info || publish_right_cam_info)
     {
@@ -125,6 +127,8 @@ int main (int argc, char** argv)
             ROS_WARN("Failed to load calibration data, check path");
         else
         {
+            ROS_INFO("Calibration data loaded\n");
+
             l_info_msg.header.frame_id = frame_id;
 
             l_info_msg.height = color_width*3/4;
@@ -173,6 +177,7 @@ int main (int argc, char** argv)
             if (publish_left_cam_info)
             {
                 l_info_msg = cinfo_left->getCameraInfo();
+                l_info_msg.header.frame_id = frame_id;
                 l_info_msg.header.stamp = time;
                 pub_left_info.publish(l_info_msg);
 
@@ -181,6 +186,7 @@ int main (int argc, char** argv)
             if (publish_right_cam_info)
             {
                 r_info_msg = cinfo_right->getCameraInfo();
+                r_info_msg.header.frame_id = frame_id;
                 r_info_msg.header.stamp = time;
                 pub_right_info.publish(r_info_msg);
 
