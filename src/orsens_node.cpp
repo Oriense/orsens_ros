@@ -82,8 +82,8 @@ int main (int argc, char** argv)
     nh.param<bool>(node_name+"/compress_depth", compress_depth, false);
     nh.param<bool>(node_name+"/publish_depth", publish_depth, true);
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
-    nh.param<bool>(node_name+"/publish_left_cam_info", publish_left_cam_info, true);
-    nh.param<bool>(node_name+"/publish_right_cam_info", publish_right_cam_info, false);
+    nh.param<bool>(node_name+"/publish_left_camera_info", publish_left_cam_info, true);
+    nh.param<bool>(node_name+"/publish_right_camera_info", publish_right_cam_info, false);
     nh.param<bool>(node_name+"/publish_nearest_point", publish_nearest_point, false);
     nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
     bool pub_obstacle = true;
@@ -104,7 +104,7 @@ int main (int argc, char** argv)
     ros::Publisher pub_left_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/left/camera_info", 1);
     ros::Publisher pub_right_info = nh.advertise<sensor_msgs::CameraInfo>("/orsens/right/camera_info", 1);
     ros::Publisher pub_cloud = nh.advertise<pcl::PCLPointCloud2>("/orsens/cloud", 1);
-    ros::Publisher pub_nearest_point = nh.advertise<orsens::NearestObstacle>("/orsens/nearest_point", 1);
+    ros::Publisher pub_nearest_point = nh.advertise<orsens::NearestObstacle>("/orsens/nearest_obstacle", 1);
     ros::Publisher pub_segmentation_mask = nh.advertise<sensor_msgs::Image>("/orsens/segmentation_mask", 1);
 
     ros::Rate loop_rate(15);
