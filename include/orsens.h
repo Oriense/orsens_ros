@@ -144,6 +144,8 @@ public:
     ScenePoint getNearestPoint(Rect roi=Rect()); // the same, but point
     Obstacle getNearestObstacle(Rect roi=Rect());
 
+    ScenePoint getFarestPoint(uint16_t width=100, Rect roi=Rect()); //finds farest point with given x-zone width in the region, if roi is empty - in a whole image
+
     //detection
     std::vector<Human> getHumans();
     //Human getNearestHumanBiometrics(bool detect_gender=true, bool detect_age=false);
