@@ -5,8 +5,8 @@
     <param name="depth_width" value="640"/> 
     <param name="compress_color" value="false"/> 
     <param name="compress_depth" value="false"/> 
-    <param name="publish_depth" value="true"/> 
-    <param name="publish_cloud" value="true"/> 
+    <param name="publish_depth" value="false"/> 
+    <param name="publish_cloud" value="false"/> 
     <param name="data_path" value="$(find orsens)/data"/>
   </node> 
   <node pkg="image_view" type="image_view" name="color">
@@ -14,11 +14,7 @@
     <param name="autosize" value="true" />
   </node> 
   <node pkg="image_view" type="image_view" name="depth">
-    <remap from="image" to="orsens/disparity" />
+    <remap from="image" to="orsens/disp" />
     <param name="autosize" value="true" />
   </node> 
-  <node pkg="image_view" type="image_view" name="depth2">
-    <remap from="image" to="orsens/depth" />
-    <param name="autosize" value="true" />
-  </node> 
-</launch>
+ </launch>

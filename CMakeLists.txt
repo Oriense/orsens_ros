@@ -102,23 +102,47 @@ catkin_package(
 ## Build ##
 ###########
 
+if(MSVC64 OR MINGW64)
+  set(X86_64 1)
+elseif(MINGW OR (MSVC AND NOT CMAKE_CROSSCOMPILING))
+  set(X86 1)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
+  set(X86_64 1)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "i686.*|i386.*|x86.*|amd64.*|AMD64.*")
+  set(X86 1)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)")
+  set(ARM 1)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)")
+  set(AARCH64 1)
+endif()
+
+if (X86_64)
+  message("Architecture x64")
+  set(LIB_DIRECTORY ../orsens_ros/lib/x64)
+elseif (ARM)
+  message("Architecture ARM")
+  set(LIB_DIRECTORY ../orsens_ros/lib/arm)
+elseif(X86)
+  message("Architecture x86")
+  set(LIB_DIRECTORY ../orsens_ros/lib)
+endif()
+
 include_directories(include
   ${catkin_INCLUDE_DIRS}
   ${avcodec_INCLUDE_DIRS}
   ${swscale_INCLUDE_DIRS}
 )
-#LINK_DIRECTORIES(lib)
 
 find_library(ORSENS
     NAMES orsens
-    HINTS "../orsens_ros/lib"
+    HINTS "${LIB_DIRECTORY}"
 )
 
 ## Declare a cpp executable
 add_executable(orsens_node src/orsens_node.cpp)
 find_library(ORSENS
     NAMES orsens
-    HINTS "lib"
+    HINTS "${LIB_DIRECTORY}"
 )
 target_link_libraries(orsens_node
   "${ORSENS}"
