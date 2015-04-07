@@ -1,0 +1,16 @@
+language:
+  - cpp
+compiler:
+  - gcc
+#notifications:
+#  email:
+#    recipients:
+#      - dave.hershberger@sri.com
+#    on_success: change #[always|never|change] # default: change
+#    on_failure: change #[always|never|change] # default: always
+before_install: # Use this to prepare the system to install prerequisites or dependencies
+install: # Use this to install any prerequisites or dependencies necessary to run your build
+before_script: # Use this to prepare your build for testing e.g. copy database configurations, environment variables, etc.
+  - source /opt/ros/$ROS_DISTRO/setup.bash  
+script: # All commands must exit with code 0 on success. Anything else is considered failure.
+  - catkin_make -j2
