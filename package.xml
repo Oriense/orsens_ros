@@ -3,11 +3,12 @@
   <name>orsens</name>
   <version>1.0.0</version>
   <description>Package for OrSens 3d-camera</description>
-  <maintainer email="zhukov@oriense.com">zhukov</maintainer>
+  <maintainer email="zhukov@oriense.com">Konstantin Zhukov</maintainer>
   <license>BSD</license>
   <url type="bugtracker">https://github.com/Oriense/orsens_ros/issues</url>
   <url type="repository">https://github.com/Oriense/orsens_ros</url>
   <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>genmsg</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
@@ -21,6 +22,13 @@
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>image_geometry</run_depend>
+  <run_depend>camera_info_manager</run_depend>
+  <run_depend>stereo_msgs</run_depend>
+  <run_depend>pcl_ros</run_depend>
+  <run_depend>pcl_conversions</run_depend>
 
   <export>
 
