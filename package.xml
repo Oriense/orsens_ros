@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>orsens</name>
-  <version>1.0-beta</version>
+  <version>1.0.0</version>
   <description>Package for OrSens 3d-camera</description>
   <maintainer email="zhukov@oriense.com">zhukov</maintainer>
   <license>BSD</license>
