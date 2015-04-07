@@ -1,6 +1,6 @@
 Commercial use of this software is allowed only with conjunction with hardware made by Oriense company (PROvision LLC) 
 
-In the rest under the MIT License (MIT)
+In the rest under the BSD License (BSD)
 
 Copyright (c) {{{2015}}} {{{Oriense (PROvision LLC}}}
 
