@@ -71,7 +71,10 @@ private:
     Mat segmentation_mask_;
 
     //what we've got processed
-    bool got_gray_, got_depth_, got_discrete_depth_;
+    bool got_gray_, got_depth_, got_discrete_depth_, got_seg_mask, got_nearest_point;
+
+    //options
+    Rect roi;
 
     //camera info
     static const int DISPARITY_COUNT = 256;
