@@ -286,41 +286,6 @@ int main (int argc, char** argv)
                 }
             }
 
-            if(publish_obstacles)
-            {
-                if(pub_obstacle)
-                {
-                    Obstacle obstacle = orsens_device.getNearestObstacle();
-                    obs.u = obstacle.centre.x;
-                    obs.v = obstacle.centre.y;
-                    obs.centre_pt.x = obstacle.centre_world.x;
-                    obs.centre_pt.y = obstacle.centre_world.y;
-                    obs.centre_pt.z = obstacle.centre_world.z;
-                    obs.dist = obstacle.dist;
-                    obs.angle = obstacle.angle;
-                    obs.min_pt.x = obstacle.min_pt_world.x;
-                    obs.min_pt.y = obstacle.min_pt_world.y;
-                    obs.min_pt.z = obstacle.min_pt_world.z;
-                    obs.max_pt.x = obstacle.max_pt_world.x;
-                    obs.max_pt.y = obstacle.max_pt_world.y;
-                    obs.max_pt.z = obstacle.max_pt_world.z;
-                }
-                else
-                {
-                    ScenePoint scene_point = orsens_device.getNearestPoint();
-
-                    obs.u = scene_point.pt_image.x;
-                    obs.v = scene_point.pt_image.y;
-                    obs.centre_pt.x = scene_point.pt_world.x;
-                    obs.centre_pt.y = scene_point.pt_world.y;
-                    obs.centre_pt.z = scene_point.pt_world.z;
-                }
-
-                obs.header.stamp = time;
-                obs.header.frame_id = "orsens_camera";
-                pub_obs.publish(obs);
-            }
-
             if(publish_segmentation_mask)
             {
                 Mat mask = orsens_device.getSegmentationMask();
