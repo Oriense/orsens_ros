@@ -16,8 +16,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "../../../devel/include/orsens/Obstacles.h"
-#include "../../../devel/include/orsens/Way.h"
+#include <../../devel/include/orsens/Obstacles.h>
+#include <../../devel/include/orsens/Way.h>
 
 using namespace cv;
 using namespace sensor_msgs;
