@@ -29,7 +29,8 @@
 #include <unistd.h>
 
 #include "../include/orsens.h"
-#include <../../devel/include/orsens/NearestObstacle.h>
+#include <../../devel/include/orsens/Obstacles.h>
+#include <../../devel/include/orsens/Way.h>
 
 using namespace cv;
 using namespace sensor_msgs;
@@ -68,7 +69,7 @@ int main (int argc, char** argv)
     int color_width, depth_width;
     int color_rate, depth_rate;
     bool compress_color, compress_depth;
-    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_nearest_point, publish_segmentation_mask, publish_left_cam_info, publish_right_cam_info;
+    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_obstacles, publish_segmentation_mask, publish_left_cam_info, publish_right_cam_info;
 
     nh.param<string>(node_name+"/capture_mode", capture_mode_string, "depth_only");
     nh.param<string>(node_name+"/data_path", data_path, "data"); ///TODO find orsens here?
@@ -86,7 +87,7 @@ int main (int argc, char** argv)
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
     nh.param<bool>(node_name+"/publish_left_camera_info", publish_left_cam_info, false);
     nh.param<bool>(node_name+"/publish_right_camera_info", publish_right_cam_info, false);
-    nh.param<bool>(node_name+"/publish_nearest_obstacle", publish_nearest_point, false);
+    nh.param<bool>(node_name+"/publish_obstacles", publish_obstacles, false);
     nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
     bool pub_obstacle = true;
 
@@ -106,14 +107,14 @@ int main (int argc, char** argv)
     ros::Publisher pub_left_info = nh.advertise<sensor_msgs::CameraInfo>(camera_namespace+"left/camera_info", 1);
     ros::Publisher pub_right_info = nh.advertise<sensor_msgs::CameraInfo>(camera_namespace+"right/camera_info", 1);
     ros::Publisher pub_cloud = nh.advertise<pcl::PCLPointCloud2>(camera_namespace+"cloud", 1);
-    ros::Publisher pub_nearest_point = nh.advertise<orsens::NearestObstacle>(camera_namespace+"nearest_obstacle", 1);
+    ros::Publisher pub_obs = nh.advertise<orsens::Obstacles>(camera_namespace+"obstacles", 1);
     ros::Publisher pub_segmentation_mask = nh.advertise<sensor_msgs::Image>(camera_namespace+"segmentation_mask", 1);
 
     ros::Rate loop_rate(15);
 
     sensor_msgs::Image ros_left,  ros_right, ros_disp, ros_depth, ros_mask;
     sensor_msgs::CameraInfo l_info_msg, r_info_msg;
-    orsens::NearestObstacle obs;
+    orsens::Obstacles obs;
 
     bool caminfo_loaded = false;
 
@@ -285,7 +286,7 @@ int main (int argc, char** argv)
                 }
             }
 
-            if(publish_nearest_point)
+            if(publish_obstacles)
             {
                 if(pub_obstacle)
                 {
@@ -317,7 +318,7 @@ int main (int argc, char** argv)
 
                 obs.header.stamp = time;
                 obs.header.frame_id = "orsens_camera";
-                pub_nearest_point.publish(obs);
+                pub_obs.publish(obs);
             }
 
             if(publish_segmentation_mask)
