@@ -45,6 +45,7 @@ struct Obstacle : SceneObject
 struct SceneInfo
 {
     uint16_t nearest_distance;
+    uint8_t nearest_disp;
     ScenePoint nearest_point;
     Obstacle nearest_obstacle;
 };
@@ -159,10 +160,12 @@ public:
     uint16_t getNearestDistance(); // finds nearest distance in the region, if roi is empty - in a whole image
     ScenePoint getNearestPoint(); // the same, but point
     Obstacle getNearestObstacle();
+    Obstacle getNearestObstacle2();
 
     ScenePoint getFarestPoint(uint16_t width=100); //finds farest point with given x-zone width in the region, if roi is empty - in a whole image
 
-    float getBypassDirection();
+    float getBypassDirection(float fov_total = 60, float fov_perc = 50.0, int dist_th=3000, int zones_cnt=10, float occ_th = 0.1, float pts_th=0.01);
+    //int findBypass(float fov_total = 60, float fov_perc = 50.0, int dist_th=3000, int zones_cnt=10, float occ_th = 0.1);
 
     //detection
     std::vector<Human> getHumans();
@@ -177,6 +180,7 @@ public:
     //misc
     Scalar dist2rgb(uint16_t dist);
     uint8_t dist2disp(uint16_t dist);
+    uint16_t disp2dist(uint8_t disp);
 
 };
 
