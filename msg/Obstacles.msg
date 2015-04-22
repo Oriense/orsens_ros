@@ -5,4 +5,4 @@ geometry_msgs/Point centre_pt
 geometry_msgs/Point min_pt
 geometry_msgs/Point max_pt
 uint16 dist
-float64 angle
+float32 angle

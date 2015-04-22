@@ -58,7 +58,8 @@ pkg_check_modules(swscale libswscale REQUIRED)
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   NearestObstacle.msg
+   Obstacles.msg
+   Way.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -152,10 +153,11 @@ target_link_libraries(orsens_node
   ${catkin_LIBRARIES}
 )
 
-#add_executable(orview src/orview.cpp)
-#target_link_libraries(orview
-#  ${catkin_LIBRARIES}
-#)
+add_executable(orview src/orview_node.cpp)
+target_link_libraries(orview
+  "${ORSENS}"
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##

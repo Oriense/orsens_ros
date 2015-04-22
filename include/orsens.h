@@ -42,6 +42,13 @@ struct Obstacle : SceneObject
     Point3f max_pt_world;
 };
 
+struct SceneInfo
+{
+    uint16_t nearest_distance;
+    ScenePoint nearest_point;
+    Obstacle nearest_obstacle;
+};
+
 class Orsens
 {
 
@@ -58,7 +65,6 @@ private:
     uint16_t depth_width_;
     uint16_t depth_height_;
     uint8_t depth_rate_;
-    float discrete_depth_step_;
 
     uint16_t left_width_;
     uint16_t left_height_;
@@ -71,10 +77,11 @@ private:
     Mat segmentation_mask_;
 
     //what we've got processed
-    bool got_gray_, got_depth_, got_discrete_depth_, got_seg_mask, got_nearest_point;
+    bool got_gray_, got_depth_, got_discrete_depth_, got_seg_mask;
 
-    //options
-    Rect roi;
+    //parametrs
+    float discrete_depth_step_;
+    Rect roi_;
 
     //camera info
     static const int DISPARITY_COUNT = 256;
@@ -89,6 +96,7 @@ private:
 
     //scene info
     std::vector<Human> humans_;
+    SceneInfo scene_info_;
 
     //processing
     bool makeGray();
@@ -120,6 +128,7 @@ public:
 
     //setting parametrs
     void setDiscreteDepthStep(float step);
+    void setRoi(Rect);
 
     //getting data
     Mat getLeft();
@@ -147,11 +156,13 @@ public:
     uint16_t getMinDistance(); //minimun possible distance camera able to measure
     uint16_t getMaxDistance(); //maximum possible distance
 
-    uint16_t getNearestDistance(Rect roi=Rect()); // finds nearest distance in the region, if roi is empty - in a whole image
-    ScenePoint getNearestPoint(Rect roi=Rect()); // the same, but point
-    Obstacle getNearestObstacle(Rect roi=Rect());
+    uint16_t getNearestDistance(); // finds nearest distance in the region, if roi is empty - in a whole image
+    ScenePoint getNearestPoint(); // the same, but point
+    Obstacle getNearestObstacle();
 
-    ScenePoint getFarestPoint(uint16_t width=100, Rect roi=Rect()); //finds farest point with given x-zone width in the region, if roi is empty - in a whole image
+    ScenePoint getFarestPoint(uint16_t width=100); //finds farest point with given x-zone width in the region, if roi is empty - in a whole image
+
+    float getBypassDirection();
 
     //detection
     std::vector<Human> getHumans();
