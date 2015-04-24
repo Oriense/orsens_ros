@@ -94,6 +94,7 @@ private:
     uint16_t cy_;
     uint16_t baseline_;
     uint16_t focal_;
+    float fov_;
 
     //scene info
     std::vector<Human> humans_;
@@ -119,13 +120,15 @@ public:
     static CaptureMode captureModeFromString(const std::string& str);
 
     bool start(CaptureMode capture_mode=CAPTURE_DEPTH_ONLY, string data_path="../data", uint16_t color_width=640, uint16_t depth_width=640, uint8_t color_rate=15, uint8_t depth_rate=15,
-               bool compress_color=false, bool compress_depth=false, uint16_t baseline=60);
+               bool compress_color=false, bool compress_depth=false, float fov=60.0, uint16_t baseline=60);
     bool stop();
 
     bool initBiometrics(bool init_gender_estimation=true, bool init_age_estimation=false);
     void deinitBiometrics();
 
     bool grabSensorData();
+    bool filterDisp();
+    bool removeFloor();
 
     //setting parametrs
     void setDiscreteDepthStep(float step);
@@ -161,11 +164,11 @@ public:
     ScenePoint getNearestPoint(); // the same, but point
     Obstacle getNearestObstacle();
     Obstacle getNearestObstacle2();
+    bool detectDeadZone();
 
     ScenePoint getFarestPoint(uint16_t width=100); //finds farest point with given x-zone width in the region, if roi is empty - in a whole image
 
-    float getBypassDirection(float fov_total = 60, float fov_perc = 50.0, int dist_th=3000, int zones_cnt=10, float occ_th = 0.1, float pts_th=0.01);
-    //int findBypass(float fov_total = 60, float fov_perc = 50.0, int dist_th=3000, int zones_cnt=10, float occ_th = 0.1);
+    float getBypassDirection(int dist_th=3000, int zones_cnt=10, float occ_th = 0.1, float pts_th=0.01);
 
     //detection
     std::vector<Human> getHumans();
