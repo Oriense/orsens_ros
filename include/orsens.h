@@ -29,7 +29,9 @@ class Orsens
 
 private:
 
-    string data_path_;
+
+
+     string data_path_;
 
     uint16_t color_width_;
     uint16_t color_height_;
@@ -82,10 +84,12 @@ public:
     static const int MAX_DISTANCE = 10000;
     static const int NO_ANGLE = 361;
 
- typedef enum
+      typedef enum
     {
         CAPTURE_DEPTH_ONLY=0, CAPTURE_LEFT_ONLY, CAPTURE_DEPTH_LEFT, CAPTURE_LEFT_RIGHT,
     } CaptureMode;
+
+    CaptureMode capture_mode_;
 
     static CaptureMode captureModeFromString(const std::string& str);
 
@@ -95,6 +99,7 @@ public:
 
     //getting data
     Mat getLeft();
+    Mat getRight();
     Mat getDisp();
     Mat getDispColored();
     Mat getDepth();
