@@ -16,10 +16,15 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <../../devel/include/orsens/Obstacles.h>
+#include <../../devel/include/orsens/Way.h>
+
 using namespace cv;
 using namespace sensor_msgs;
 
 Mat disp, left, right;
+orsens::Obstacles obs;
+orsens::Way way;
 
 Mat colorize_disp(Mat disp_mono)
 {
@@ -66,6 +71,7 @@ void disp_cb(sensor_msgs::Image disp_img)
 
     waitKey(5);
 }
+
 void disp_filtered_cb(sensor_msgs::Image disp_filtered_img)
 {
     cv_bridge::CvImagePtr disp_ptr;

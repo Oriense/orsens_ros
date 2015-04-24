@@ -2,6 +2,11 @@
   <node pkg="orsens" type="orsens_node" name="orsens"  output="screen" respawn="true">
     <param name="capture_mode" value="depth_only"/>    
     <param name="color_width" value="640"/>
+    <param name="depth_width" value="640"/> 
+    <param name="publish_depth" value="true"/> 
+    <param name="publish_cloud" value="true"/> 
+    <param name="publish_nearest_point" value="true"/> 
+    <param name="publish_segmentation_mask" value="true"/> 
     <param name="data_path" value="$(find orsens)/data"/>
   </node> 
   <node pkg="image_view" type="image_view" name="depth">
