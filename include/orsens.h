@@ -55,16 +55,10 @@ class Orsens
 
 private:
 
-<<<<<<< HEAD
-
-
-     string data_path_;
-=======
     static const int NO_DISTANCE = 0;
     static const int NO_ANGLE = 361;
 
     string data_path_;
->>>>>>> 59116f51cbabdd9b09b8bf5cc5dc11fc2fdead43
 
     uint16_t color_width_;
     uint16_t color_height_;
@@ -116,16 +110,7 @@ public:
     Orsens() {};
     ~Orsens() {};
 
-<<<<<<< HEAD
-
-    static const int NO_DISTANCE = 0;
-    static const int MAX_DISTANCE = 10000;
-    static const int NO_ANGLE = 361;
-
-      typedef enum
-=======
     typedef enum
->>>>>>> 59116f51cbabdd9b09b8bf5cc5dc11fc2fdead43
     {
         CAPTURE_DEPTH_ONLY=0, CAPTURE_LEFT_ONLY, CAPTURE_DEPTH_LEFT, CAPTURE_LEFT_RIGHT,
     } CaptureMode;
