@@ -73,7 +73,7 @@ private:
     //images
     Mat left_, right_;
     Mat left_gray_, right_gray_;
-    Mat disp_, disp_raw_, disp_raw_prev_, depth_, depth8_, discrete_depth_, discrete_depth8_;
+    Mat disp_, disp_raw_, disp_raw_prev_, disp_raw_roi_, depth_, depth8_, discrete_depth_, discrete_depth8_;
     Mat point_cloud_;
     Mat segmentation_mask_;
 
@@ -146,6 +146,8 @@ public:
     Mat getDiscreteDepth8();
     Mat getSegmentationMask();
 
+    Size getDepthSize();
+    Size getColorSize();
     uint8_t getRate();
 
     //measuring. distances are in millimetres, except functions ends with M (metres). directions in angles
