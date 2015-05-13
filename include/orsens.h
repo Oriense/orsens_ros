@@ -73,7 +73,7 @@ private:
     //images
     Mat left_, right_;
     Mat left_gray_, right_gray_;
-    Mat disp_, disp_raw_, disp_raw_prev_, disp_raw_roi_, depth_, depth8_, discrete_depth_, discrete_depth8_;
+    Mat disp_, disp_raw_, disp_raw_prev_, disp_src_, depth_, depth8_, discrete_depth_, discrete_depth8_;
     Mat point_cloud_;
     Mat segmentation_mask_;
 
@@ -104,7 +104,11 @@ private:
     bool makeGray();
     bool makeDepth();
     bool makeDiscreteDepth();
-    bool segmentFloor(Mat disp);
+    bool segmentFloor();
+
+    bool prev_floor_state;
+    Mat segmentation_mask_prev_;
+    std::deque<int> floor_end;
 
 public:
     Orsens() {};
@@ -127,7 +131,7 @@ public:
     void deinitBiometrics();
 
     bool grabSensorData();
-    bool filterDisp();
+    bool filterDisp(uint16_t maxSpeckleSize=1000);
     bool removeFloor();
 
     //setting parametrs
@@ -165,12 +169,12 @@ public:
     uint16_t getNearestDistance(); // finds nearest distance in the region, if roi is empty - in a whole image
     ScenePoint getNearestPoint(); // the same, but point
     Obstacle getNearestObstacle();
-    Obstacle getNearestObstacle2();
     bool detectDeadZone();
 
     ScenePoint getFarestPoint(uint16_t width=100); //finds farest point with given x-zone width in the region, if roi is empty - in a whole image
 
-    float getBypassDirection(int dist_th=3000, int zones_cnt=10, float occ_th = 0.1, float pts_th=0.01);
+    Mat getSceneGrid(vector<float> cols, vector<float> rows, int dist_th=3000, float occ_th=0.1, float pts_th=0.01);
+   // float getBypassDirection(int dist_th, int zones_cnt, float occ_th, float pts_th);
 
     //detection
     std::vector<Human> getHumans();
