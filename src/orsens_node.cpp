@@ -69,12 +69,12 @@ int main (int argc, char** argv)
     int color_width, depth_width;
     int color_rate, depth_rate;
     bool compress_color, compress_depth;
-    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_obstacles, publish_segmentation_mask, publish_left_cam_info, publish_right_cam_info;
+    bool publish_color, publish_disp, publish_depth, publish_cloud, publish_obstacles, publish_cam_info;
 
     nh.param<string>(node_name+"/capture_mode", capture_mode_string, "depth_only");
     nh.param<string>(node_name+"/data_path", data_path, "data"); ///TODO find orsens here?
-    nh.param<string>(node_name+"/left_camera_info_url", left_camera_info_url, "file://"+data_path+"/calibration/caminfo_left.yml");
-    nh.param<string>(node_name+"/right_camera_info_url", right_camera_info_url, "file://"+data_path+"/calibration/caminfo_right.yml");
+    nh.param<string>(node_name+"/left_camera_info_url", left_camera_info_url, "file://");
+    nh.param<string>(node_name+"/right_camera_info_url", right_camera_info_url, "file://");
     nh.param<string>(node_name+"/frame_id", frame_id, "orsens_camera");
     nh.param<string>(node_name+"/camera_namespace", camera_namespace, "/orsens/");
     nh.param<int>(node_name+"/color_width", color_width, 640);
@@ -85,11 +85,13 @@ int main (int argc, char** argv)
     nh.param<bool>(node_name+"/compress_depth", compress_depth, false);
     nh.param<bool>(node_name+"/publish_depth", publish_depth, true);
     nh.param<bool>(node_name+"/publish_cloud", publish_cloud, false);
-    nh.param<bool>(node_name+"/publish_left_camera_info", publish_left_cam_info, false);
-    nh.param<bool>(node_name+"/publish_right_camera_info", publish_right_cam_info, false);
     nh.param<bool>(node_name+"/publish_obstacles", publish_obstacles, false);
-    nh.param<bool>(node_name+"/publish_segmentation_mask", publish_segmentation_mask, false);
     bool pub_obstacle = true;
+
+    if(left_camera_info_url=="file://" || right_camera_info_url=="file://")
+        publish_cam_info=false;
+    else
+        publish_cam_info=true;
 
     Orsens::CaptureMode capture_mode = Orsens::captureModeFromString(capture_mode_string);
 
@@ -108,7 +110,6 @@ int main (int argc, char** argv)
     ros::Publisher pub_right_info = nh.advertise<sensor_msgs::CameraInfo>(camera_namespace+"right/camera_info", 1);
     ros::Publisher pub_cloud = nh.advertise<pcl::PCLPointCloud2>(camera_namespace+"cloud", 1);
     ros::Publisher pub_obs = nh.advertise<orsens::Obstacles>(camera_namespace+"obstacles", 1);
-    ros::Publisher pub_segmentation_mask = nh.advertise<sensor_msgs::Image>(camera_namespace+"segmentation_mask", 1);
 
     ros::Rate loop_rate(15);
 
@@ -118,7 +119,7 @@ int main (int argc, char** argv)
 
     bool caminfo_loaded = false;
 
-    if (publish_left_cam_info || publish_right_cam_info)
+    if (publish_cam_info)
     {
         cinfo_left = new CameraInfoManager(nh, "/orsens/left", left_camera_info_url);
         cinfo_right = new CameraInfoManager(nh, "/orsens/right", right_camera_info_url);
@@ -175,22 +176,17 @@ int main (int argc, char** argv)
 
         if (caminfo_loaded)
         {
-            if (publish_left_cam_info)
+            if (publish_cam_info)
             {
                 l_info_msg = cinfo_left->getCameraInfo();
                 l_info_msg.header.frame_id = frame_id;
                 l_info_msg.header.stamp = time;
                 pub_left_info.publish(l_info_msg);
 
-            }
-
-            if (publish_right_cam_info)
-            {
                 r_info_msg = cinfo_right->getCameraInfo();
                 r_info_msg.header.frame_id = frame_id;
                 r_info_msg.header.stamp = time;
                 pub_right_info.publish(r_info_msg);
-
             }
         }
 
@@ -286,20 +282,39 @@ int main (int argc, char** argv)
                 }
             }
 
-            if(publish_segmentation_mask)
+            if(publish_obstacles)
             {
-                Mat mask = orsens_device.getSegmentationMask();
-
-                if (!mask.empty())
+                if(pub_obstacle)
                 {
-                    fillImage(ros_mask, "mono8", mask.rows, mask.cols, mask.cols, mask.data);
+                    SceneInfo scene_info = orsens_device.getSceneInfo();
+                    obs.u = scene_info.nearest_obstacle.centre.x;
+                    obs.v = scene_info.nearest_obstacle.centre.y;
+                    obs.centre_pt.x = scene_info.nearest_obstacle.centre_world.x;
+                    obs.centre_pt.y = scene_info.nearest_obstacle.centre_world.y;
+                    obs.centre_pt.z = scene_info.nearest_obstacle.centre_world.z;
+                    obs.dist = scene_info.nearest_obstacle.dist;
+                    obs.angle = scene_info.nearest_obstacle.angle;
+                    obs.min_pt.x = scene_info.nearest_obstacle.min_pt_world.x;
+                    obs.min_pt.y = scene_info.nearest_obstacle.min_pt_world.y;
+                    obs.min_pt.z = scene_info.nearest_obstacle.min_pt_world.z;
+                    obs.max_pt.x = scene_info.nearest_obstacle.max_pt_world.x;
+                    obs.max_pt.y = scene_info.nearest_obstacle.max_pt_world.y;
+                    obs.max_pt.z = scene_info.nearest_obstacle.max_pt_world.z;
+                }
+                else
+                {
+                    SceneInfo scene_info = orsens_device.getSceneInfo(false);
 
-                    ros_mask.header.stamp = time;
-                    ros_mask.header.frame_id = frame_id;
-
-                    pub_segmentation_mask.publish(ros_mask);
+                    obs.u = scene_info.nearest_point.pt_image.x;
+                    obs.v = scene_info.nearest_point.pt_image.y;
+                    obs.centre_pt.x = scene_info.nearest_point.pt_world.x;
+                    obs.centre_pt.y = scene_info.nearest_point.pt_world.y;
+                    obs.centre_pt.z = scene_info.nearest_point.pt_world.z;
                 }
 
+                obs.header.stamp = time;
+                obs.header.frame_id = "orsens_camera";
+                pub_obs.publish(obs);
             }
 
         }
