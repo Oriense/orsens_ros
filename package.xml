@@ -31,6 +31,6 @@
   <run_depend>pcl_conversions</run_depend>
 
   <export>
-
+  	<rosdoc config="rosdoc.yaml" />
   </export>
 </package>
