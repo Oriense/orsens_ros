@@ -29,8 +29,8 @@
 #include <unistd.h>
 
 #include "../include/orsens.h"
-#include <../../devel/include/orsens/Obstacles.h>
-#include <../../devel/include/orsens/Way.h>
+#include <../../../devel/include/orsens/Obstacles.h>
+#include <../../../devel/include/orsens/Way.h>
 
 using namespace cv;
 using namespace sensor_msgs;
@@ -148,6 +148,7 @@ int main (int argc, char** argv)
     while (nh.ok() && working)
     {
         orsens_device.grabSensorData();
+        orsens_device.filterDisp();
 
         Mat left, right, disp, depth, cloud;
 
