@@ -28,9 +28,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "../include/orsens.h"
-#include <../../../devel/include/orsens/Obstacles.h>
-#include <../../../devel/include/orsens/Way.h>
+#include "orsens.h"
+#include <orsens/Obstacles.h>
+#include <orsens/Way.h>
 
 using namespace cv;
 using namespace sensor_msgs;
