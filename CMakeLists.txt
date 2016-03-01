@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(orsens)
 
+set(CMAKE_BUILD_TYPE Release)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -141,6 +143,7 @@ find_library(ORSENS
 
 ## Declare a cpp executable
 add_executable(orsens_node src/orsens_node.cpp)
+add_dependencies(orsens_node orsens_generate_messages_cpp)
 find_library(ORSENS
     NAMES orsens
     HINTS "${LIB_DIRECTORY}"
@@ -154,6 +157,7 @@ target_link_libraries(orsens_node
 )
 
 add_executable(orview src/orview_node.cpp)
+add_dependencies(orview orsens_generate_messages_cpp)
 target_link_libraries(orview
   "${ORSENS}"
   ${catkin_LIBRARIES}
