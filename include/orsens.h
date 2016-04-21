@@ -255,8 +255,9 @@ public:
     //processing
     /**removes speckles
     * @param maxSpeckleSize The maximum speckle size to consider it a speckle
+    * @param newVal The disparity value used to paint-off the speckles
     */
-    bool filterDisp(uint16_t maxSpeckleSize=1000);
+    bool filterDisp(uint16_t maxSpeckleSize=1000, uint8_t newVal=0);
 
     /**removes floor points
     */
@@ -265,8 +266,9 @@ public:
     //getting data
 
    /** returns rgb image from left camera
+   * @param gray if set returns gray image
    */
-    Mat getLeft();
+    Mat getLeft(bool gray=false);
    /** returns rgb image from right camera
    */
     Mat getRight();
@@ -306,6 +308,10 @@ public:
     float directionToImagePoint(uint16_t x, uint16_t y);
     /** returns direction to image rectangle */
     float directionToImageRect(Rect rect);
+
+
+    int32_t maxWorldX(uint16_t x);
+    int32_t maxWorldY(uint16_t y);
 
     /** returns minimun possible distance camera able to measure
     */
