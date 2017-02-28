@@ -121,7 +121,12 @@ endif()
 
 if (X86_64)
   message("Architecture x64")
-  set(LIB_DIRECTORY ../orsens_ros/lib/x64)
+  if(${roscpp_VERSION_MINOR} GREATER 11)
+    message("ROS Kinetic")
+    set(LIB_DIRECTORY ../orsens_ros/lib/x64_kinetic)
+  else()
+    set(LIB_DIRECTORY ../orsens_ros/lib/x64)
+  endif()
 elseif (ARM)
   message("Architecture ARM")
   set(LIB_DIRECTORY ../orsens_ros/lib/arm)
@@ -136,19 +141,15 @@ include_directories(include
   ${avcodec_INCLUDE_DIRS}
   ${swscale_INCLUDE_DIRS}
 )
-
+unset(ORSENS CACHE)
 find_library(ORSENS
     NAMES orsens
     HINTS "${LIB_DIRECTORY}"
 )
-
 ## Declare a cpp executable
 add_executable(orsens_node src/orsens_node.cpp)
 add_dependencies(orsens_node orsens_generate_messages_cpp)
-find_library(ORSENS
-    NAMES orsens
-    HINTS "${LIB_DIRECTORY}"
-)
+
 target_link_libraries(orsens_node
   "${ORSENS}"
   ${avutil_LIBRARIES}  
